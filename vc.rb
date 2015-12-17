@@ -43,31 +43,31 @@ class VC
   end
 
   def self.build_snapshot
-    commit = ""
+    snapshot_body = ""
 
     files.each do |file|
       destination = "#{BACKUPS_FOLDER}/#{hash(contents(file))}"
 
       if object_already_exists?(BACKUPS_FOLDER, destination)
-        commit << "#{destination}    #{file}\n"
+        snapshot_body << "#{destination}    #{file}\n"
       else
         puts "You have unsaved changes in #{file}. Please back them up before taking a snapshot."
         return
       end
     end
 
-    return commit
+    return snapshot_body
   end
 
-  def self.save_snapshot(snapshot, message)
-    destination = "#{SNAPSHOTS_FOLDER}/#{hash(snapshot)}"
+  def self.save_snapshot(snapshot_body, message)
+    destination = "#{SNAPSHOTS_FOLDER}/#{hash(snapshot_body)}"
 
     unless object_already_exists?(SNAPSHOTS_FOLDER, destination)
       puts "Creating snapshot."
 
-      snapshot << "\n#{message}\n#{Time.now}\n"
+      snapshot_body << "\n#{message}\n#{Time.now}\n"
 
-      File.open(destination, "w") { |file| file.write(snapshot) }
+      File.open(destination, "w") { |file| file.write(snapshot_body) }
     else
       puts "This snapshot has already been created."
     end
@@ -76,9 +76,9 @@ class VC
   def self.snapshot(message)
     FileUtils.mkdir_p(SNAPSHOTS_FOLDER)
 
-    snapshot = build_snapshot
+    snapshot_body = build_snapshot
 
-    save_snapshot(snapshot, message) if snapshot
+    save_snapshot(snapshot_body, message) if snapshot_body
   end
 
   def self.restore(snapshot)
