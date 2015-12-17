@@ -66,12 +66,24 @@ class VC
     unless object_already_exists?(SNAPSHOTS_FOLDER, destination)
       puts "Creating snapshot."
 
-      snapshot_body << "\n#{message}\n#{Time.now}\n"
+      if current_snapshot
+        snapshot_body << "\n#{current_snapshot}\n"
+      else
+        snapshot_body << "\n\n"
+      end
+
+      snapshot_body << "#{message}\n#{Time.now}\n"
 
       File.open(destination, "w") { |file| file.write(snapshot_body) }
     else
       puts "This snapshot has already been created."
     end
+
+    set_current_snap(destination)
+  end
+
+  def self.set_current_snap(snapshot)
+    File.open(CURRENT_SNAP, "w") { |file| file.write(snapshot) }
   end
 
   def self.snapshot(message)
@@ -87,7 +99,7 @@ class VC
 
     puts "Snapping to #{snapshot}"
 
-    files = lines[0..-4]
+    files = lines[0..-5]
     files.each do |file|
       object, destination = file.split
       FileUtils.copy(object, destination)
@@ -112,24 +124,30 @@ class VC
 
   def self.find_snapshot_by_name(name)
     matches = Dir.glob("#{NAMES_FOLDER}/#{name}")
-    if matches.empty?
-      return
-    else
+    if matches.any?
       return matches.first
     end
   end
 
-  def self.snap(snapshot_identifier)
-    if snapshot = find_snapshot_by_hash(snapshot_identifier)
+  def self.find_snapshot(identifier)
+    if File.file?(identifier)
+      return identifier
+    elsif snapshot = find_snapshot_by_hash(identifier)
+      return snapshot
+    elsif snapshot = find_snapshot_by_name(identifier)
+      return File.read(snapshot)
+    end
+  end
+
+  def self.snap(identifier)
+    if snapshot = find_snapshot(identifier)
       restore(snapshot)
-    elsif snapshot = find_snapshot_by_name(snapshot_identifier)
-      restore(File.read(snapshot))
     else
       puts "Couldn't find that snapshot."
       return
     end
 
-    File.open(CURRENT_SNAP, "w") { |file| file.write(snapshot) }
+    set_current_snap(snapshot)
   end
 
   def self.name(hash, name)
@@ -143,18 +161,52 @@ class VC
   end
 
   def self.where
-    puts contents(CURRENT_SNAP)
+    if File.file?(CURRENT_SNAP)
+      puts contents(CURRENT_SNAP)
+    else
+      puts "Haven't snapped anywhere yet."
+    end
   end
 
   def self.current_snapshot
-    current_snap = File.read(CURRENT_SNAP)
-    type, identifier = current_snap.split("/")
+    if File.file?(CURRENT_SNAP)
+      current_snap = File.read(CURRENT_SNAP)
+      type, identifier = current_snap.split("/")
 
-    case type
-    when "vc_snapshots"
-      return current_snap
-    when "vc_names"
-      return contents(current_snap)
+      case type
+      when "vc_snapshots"
+        return current_snap
+      when "vc_names"
+        return contents(current_snap)
+      end
+    end
+  end
+
+  def self.parent(identifier)
+    if snapshot = find_snapshot(identifier)
+      lines = File.readlines(snapshot)
+      parent = lines[-3].chomp
+      if parent != ""
+        return parent
+      end
+    end
+  end
+
+  def self.ancestry(snapshot)
+    if parent = parent(snapshot)
+      return ancestry(parent) << parent
+    else
+      return []
+    end
+  end
+
+  def self.history
+    ancestry(current_snapshot).reverse.each do |ancestor|
+      lines = File.readlines(ancestor)
+      puts ancestor
+      puts "Date: #{lines[-1]}"
+      puts "Message: #{lines[-2]}"
+      puts
     end
   end
 end
