@@ -87,7 +87,18 @@ class VC
     elsif matches.count > 1
       puts "Multiple matches found. Please be more specific."
     else
-      puts contents(matches.first)
+      lines = File.readlines(matches.first)
+
+      message = lines[-2].strip
+      time = lines[-1].strip
+
+      puts "Snapping to '#{message}' [#{time}]"
+
+      files = lines[0..-4]
+      files.each do |file|
+        object, destination = file.split
+        FileUtils.copy(object, destination)
+      end
     end
   end
 end
