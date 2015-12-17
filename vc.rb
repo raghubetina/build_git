@@ -6,6 +6,7 @@ class VC
   BACKUPS_FOLDER = "vc_backups"
   SNAPSHOTS_FOLDER = "vc_snapshots"
   NAMES_FOLDER = "vc_names"
+  CURRENT_SNAPSHOT = "current_snapshot"
 
   def self.files
     Dir.glob("#{CONTENT_ROOT_FOLDER}/**/*").select do |object|
@@ -125,7 +126,10 @@ class VC
       restore(File.read(snapshot))
     else
       puts "Couldn't find that snapshot."
+      return
     end
+
+    File.open(CURRENT_SNAPSHOT, "w") { |file| file.write(snapshot) }
   end
 
   def self.name(hash, name)
@@ -136,6 +140,10 @@ class VC
 
       File.open(destination, "w") { |file| file.write(snapshot) }
     end
+  end
+
+  def self.where
+    puts contents(CURRENT_SNAPSHOT)
   end
 end
 
