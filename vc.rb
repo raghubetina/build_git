@@ -147,7 +147,7 @@ class VC
       return
     end
 
-    set_current_snap(snapshot)
+    set_current_snap(identifier)
   end
 
   def self.name(hash, name)
