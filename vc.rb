@@ -194,9 +194,9 @@ class VC
 
   def self.ancestry(snapshot)
     if parent = parent(snapshot)
-      return ancestry(parent) << parent
+      return ancestry(parent) << snapshot
     else
-      return []
+      return [snapshot]
     end
   end
 
