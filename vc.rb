@@ -6,7 +6,7 @@ class VC
   BACKUPS_FOLDER = "vc_backups"
   SNAPSHOTS_FOLDER = "vc_snapshots"
   NAMES_FOLDER = "vc_names"
-  CURRENT_SNAPSHOT = "current_snapshot"
+  CURRENT_SNAP = "current_snap"
 
   def self.files
     Dir.glob("#{CONTENT_ROOT_FOLDER}/**/*").select do |object|
@@ -129,7 +129,7 @@ class VC
       return
     end
 
-    File.open(CURRENT_SNAPSHOT, "w") { |file| file.write(snapshot) }
+    File.open(CURRENT_SNAP, "w") { |file| file.write(snapshot) }
   end
 
   def self.name(hash, name)
@@ -143,7 +143,19 @@ class VC
   end
 
   def self.where
-    puts contents(CURRENT_SNAPSHOT)
+    puts contents(CURRENT_SNAP)
+  end
+
+  def self.current_snapshot
+    current_snap = File.read(CURRENT_SNAP)
+    type, identifier = current_snap.split("/")
+
+    case type
+    when "vc_snapshots"
+      return current_snap
+    when "vc_names"
+      return contents(current_snap)
+    end
   end
 end
 
