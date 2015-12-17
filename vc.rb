@@ -41,9 +41,7 @@ class VC
     files.each { |file| create_version(file) }
   end
 
-  def self.snapshot(message)
-    FileUtils.mkdir_p(SNAPSHOTS_FOLDER)
-
+  def self.build_snapshot
     commit = ""
 
     files.each do |file|
@@ -57,19 +55,48 @@ class VC
       end
     end
 
-    destination = "#{SNAPSHOTS_FOLDER}/#{hash(commit)}"
+    return commit
+  end
+
+  def save_snapshot(snapshot, message)
+    destination = "#{SNAPSHOTS_FOLDER}/#{hash(snapshot)}"
 
     unless object_already_exists?(SNAPSHOTS_FOLDER, destination)
       puts "Creating snapshot."
 
-      commit << "\n#{message}\n"
-      commit << "#{Time.now}\n"
+      snapshot << "\n#{message}\n"
+      snapshot << "#{Time.now}\n"
 
-      File.open(destination, "w") { |file| file.write(commit) }
+      File.open(destination, "w") { |file| file.write(snapshot) }
     else
       puts "This snapshot has already been created."
     end
   end
+
+  def self.snapshot(message)
+    FileUtils.mkdir_p(SNAPSHOTS_FOLDER)
+
+    snapshot = build_snapshot
+
+    save_snapshot(snapshot, message)
+  end
 end
 
 VC.send(*ARGV)
+
+
+
+
+
+# Commit
+# tree 22d5f1167d016a7354b6bc51f4a8792585dfc936
+# parent b49bbfc56985ee7857e51747245de9282fd2ec35
+# author Raghu Betina <rbetina@users.noreply.github.com> 1450322784 -0500
+# committer Raghu Betina <rbetina@users.noreply.github.com> 1450322784 -0500
+
+# VC can create copies of files with hashes as names.
+
+
+# Tree
+# 040000 tree 67b21f78a4548b2ba3eab318bb3628d039e851e6    app
+# 100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad    readme.md
