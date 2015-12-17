@@ -1,28 +1,38 @@
 require "fileutils"
+require "digest/sha1"
 
 class VC
-  def self.version_folder_names
-    Dir.glob("*").select do |object|
-      object.start_with?("version") && File.directory?(object)
+  def self.files
+    Dir.glob("app/**/*").select { |object| File.file?(object) }
+  end
+
+  def self.hash(string)
+    Digest::SHA1.hexdigest(string)
+  end
+
+  def self.contents(file)
+    open(file).read
+  end
+
+  def self.object_already_exists?(filename)
+    Dir.glob("vc_objects/*").include?(filename)
+  end
+
+  def self.create_file_object(file)
+    destination = "vc_objects/#{hash(contents(file))}"
+
+    unless object_already_exists?(destination)
+      puts "Backing up content."
+      FileUtils.copy(file, destination)
+    else
+      puts "That content is already backed up."
     end
-  end
-
-  def self.version_numbers
-    version_folder_names.map do |version_folder_name|
-      version_folder_name.split('_').last.to_i
-    end
-  end
-
-  def self.last_version
-    version_numbers.sort.last
-  end
-
-  def self.next_version
-    last_version + 1
   end
 
   def self.add
-    FileUtils.copy_entry "app", "version_#{next_version}/"
+    FileUtils.mkdir_p("vc_objects")
+
+    files.each { |file| create_file_object(file) }
   end
 end
 
