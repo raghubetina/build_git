@@ -31,7 +31,7 @@ class VC
       puts "Backing up #{file}"
       FileUtils.copy(file, destination)
     else
-      puts "That content is already backed up."
+      puts "#{file} is already backed up."
     end
   end
 
@@ -58,14 +58,13 @@ class VC
     return commit
   end
 
-  def save_snapshot(snapshot, message)
+  def self.save_snapshot(snapshot, message)
     destination = "#{SNAPSHOTS_FOLDER}/#{hash(snapshot)}"
 
     unless object_already_exists?(SNAPSHOTS_FOLDER, destination)
       puts "Creating snapshot."
 
-      snapshot << "\n#{message}\n"
-      snapshot << "#{Time.now}\n"
+      snapshot << "\n#{message}\n#{Time.now}\n"
 
       File.open(destination, "w") { |file| file.write(snapshot) }
     else
@@ -78,25 +77,19 @@ class VC
 
     snapshot = build_snapshot
 
-    save_snapshot(snapshot, message)
+    save_snapshot(snapshot, message) if snapshot
+  end
+
+  def self.snap(hash)
+    matches = Dir.glob("#{SNAPSHOTS_FOLDER}/#{hash}*")
+    if matches.empty?
+      puts "Couldn't find that snapshot."
+    elsif matches.count > 1
+      puts "Multiple matches found. Please be more specific."
+    else
+      puts contents(matches.first)
+    end
   end
 end
 
 VC.send(*ARGV)
-
-
-
-
-
-# Commit
-# tree 22d5f1167d016a7354b6bc51f4a8792585dfc936
-# parent b49bbfc56985ee7857e51747245de9282fd2ec35
-# author Raghu Betina <rbetina@users.noreply.github.com> 1450322784 -0500
-# committer Raghu Betina <rbetina@users.noreply.github.com> 1450322784 -0500
-
-# VC can create copies of files with hashes as names.
-
-
-# Tree
-# 040000 tree 67b21f78a4548b2ba3eab318bb3628d039e851e6    app
-# 100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad    readme.md
