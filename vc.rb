@@ -97,10 +97,9 @@ class VC
     puts "Now at '#{message}' [#{time}]"
   end
 
-  def self.find_snapshot(hash)
+  def self.find_snapshot_by_hash(hash)
     matches = Dir.glob("#{SNAPSHOTS_FOLDER}/#{hash}*")
     if matches.empty?
-      puts "Couldn't find that snapshot."
       return
     elsif matches.count > 1
       puts "Multiple matches found. Please be more specific."
@@ -110,14 +109,27 @@ class VC
     end
   end
 
-  def self.snap(hash)
-    if snapshot = find_snapshot(hash)
+  def self.find_snapshot_by_name(name)
+    matches = Dir.glob("#{NAMES_FOLDER}/#{name}")
+    if matches.empty?
+      return
+    else
+      return matches.first
+    end
+  end
+
+  def self.snap(snapshot_identifier)
+    if snapshot = find_snapshot_by_hash(snapshot_identifier)
       restore(snapshot)
+    elsif snapshot = find_snapshot_by_name(snapshot_identifier)
+      restore(File.read(snapshot))
+    else
+      puts "Couldn't find that snapshot."
     end
   end
 
   def self.name(hash, name)
-    if snapshot = find_snapshot(hash)
+    if snapshot = find_snapshot_by_hash(hash)
       FileUtils.mkdir_p(NAMES_FOLDER)
 
       destination = "#{NAMES_FOLDER}/#{name}"
