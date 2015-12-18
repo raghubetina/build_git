@@ -113,6 +113,7 @@ class VC
   def self.find_snapshot_by_hash(hash)
     matches = Dir.glob("#{SNAPSHOTS_FOLDER}/#{hash}*")
     if matches.empty?
+      puts "Couldn't find that snapshot."
       return
     elsif matches.count > 1
       puts "Multiple matches found. Please be more specific."
@@ -143,7 +144,6 @@ class VC
     if snapshot = find_snapshot(identifier)
       restore(snapshot)
     else
-      puts "Couldn't find that snapshot."
       return
     end
 
@@ -171,14 +171,8 @@ class VC
   def self.current_snapshot
     if File.file?(CURRENT_SNAP)
       current_snap = File.read(CURRENT_SNAP)
-      type, identifier = current_snap.split("/")
 
-      case type
-      when "vc_snapshots"
-        return current_snap
-      when "vc_names"
-        return contents(current_snap)
-      end
+      find_snapshot(current_snap)
     end
   end
 
